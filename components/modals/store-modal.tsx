@@ -1,7 +1,9 @@
 "use client"
 import * as z from "zod";
+import axios from "axios"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { useStoreModal } from "@/hooks/use-store-modal";
@@ -15,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 
 const formSchema = z.object({
@@ -24,6 +27,8 @@ const formSchema = z.object({
 export const StoreModal = () => {
     const storeModal = useStoreModal();
 
+    const [Loading, setLoading] = useState(false)
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -31,40 +36,58 @@ export const StoreModal = () => {
         }
     });
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        // Handle form submission
-        console.log("Form submitted with values:", values);
-    }
+        try{
+           setLoading(true);
 
-    return (
-        <Modal
-            title="Create Store"
-            description="Create a new store to sell your products"
-            isOpen={storeModal.isOpen}
-            onClose={storeModal.onClose}>
+        const response = await axios.post('/api/stores', values);
+        toast.success("Store Created")
+
+        }catch(error){
+            toast.error("something went wrong");
+            
+        }finally{
+            setLoading(false);
+        }
+    }
+return (
+
+<Modal
+    title="Create Store"
+    description="Create a new store to sell your products"
+    isOpen={storeModal.isOpen}
+    onClose={storeModal.onClose}>
     <div>
-      <div className="space-y-4 py-2 pb-4">
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-                <FormField
+        <div className="space-y-4 py-2 pb-4">
+            <Form {...form}>
+               <form onSubmit={form.handleSubmit(onSubmit)}>
+                 <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="E-Commerce" type="text" {...field} />
+                                <Input 
+                                disabled={Loading} 
+                                placeholder="E-Commerce" 
+                                type="text" {...field} />
                             </FormControl>
                             <FormMessage />
-                        </FormItem>
-                    )} />
-                <div className="pt-6 space-x-2 flex items-center justify-end w-full">
-                    <Button variant="outline" onClick={storeModal.onClose}>Cancel</Button>
-                    <Button type="submit">Continue</Button>
-                </div>
-            </form>
-        </Form>
-      </div>
+                    </FormItem>
+                )} />
+                  <div className="pt-6 space-x-2 flex items-center justify-end w-full">
+                    <Button
+                    disabled={Loading} 
+                    variant="outline" 
+                    onClick={storeModal.onClose}>Cancel</Button>
+                    <Button 
+                    disabled={Loading} 
+                    type="submit">Continue</Button>
+                   </div>
+                </form>
+            </Form>
+        </div>
     </div>
-        </Modal>
-    )
+</Modal>
+)
 }
